@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +11,7 @@ import { LogOut, Settings, MessageCircle, User, Car, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthState } from "@/hooks/useAuthState";
 import { toast } from "sonner";
+import { ThemeToggle } from "./ThemeToggle";
 import ImageUpload from "./ImageUpload";
 
 interface DriverProfile {
@@ -150,16 +152,16 @@ const DriverDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur border-b sticky top-0 z-10">
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur border-b sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Avatar className="h-10 w-10">
@@ -169,33 +171,36 @@ const DriverDashboard = () => {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-xl font-semibold">Dashboard Motorista</h1>
-              <p className="text-sm text-gray-600">
+              <h1 className="text-xl font-semibold dark:text-white">Dashboard Motorista</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 {user?.user_metadata?.name || user?.email}
               </p>
             </div>
           </div>
           
-          <Button variant="ghost" size="icon" onClick={handleLogout}>
-            <LogOut className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button variant="ghost" size="icon" onClick={handleLogout}>
+              <LogOut className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-4xl mx-auto p-4 space-y-6">
         {/* Status Card */}
-        <Card className="bg-white/80 backdrop-blur">
+        <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 dark:text-white">
                   Status Online
                   <Badge variant={profile?.is_online ? "default" : "secondary"}>
                     {profile?.is_online ? 'Online' : 'Offline'}
                   </Badge>
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="dark:text-gray-300">
                   Controle sua disponibilidade para receber corridas
                 </CardDescription>
               </div>
@@ -227,14 +232,14 @@ const DriverDashboard = () => {
         )}
 
         {/* Profile Card */}
-        <Card className="bg-white/80 backdrop-blur">
+        <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur">
           <CardHeader className="flex-row items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 dark:text-white">
                 <Car className="h-5 w-5" />
                 Informações do Veículo
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="dark:text-gray-300">
                 Mantenha seus dados atualizados
               </CardDescription>
             </div>
@@ -321,7 +326,7 @@ const DriverDashboard = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     {profile.profile_photo_url && (
                       <div className="text-center">
-                        <p className="text-sm text-gray-600 mb-2">Foto de Perfil</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Foto de Perfil</p>
                         <img
                           src={profile.profile_photo_url}
                           alt="Foto de perfil"
@@ -331,7 +336,7 @@ const DriverDashboard = () => {
                     )}
                     {profile.car_photo_url && (
                       <div className="text-center">
-                        <p className="text-sm text-gray-600 mb-2">Foto do Carro</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Foto do Carro</p>
                         <img
                           src={profile.car_photo_url}
                           alt="Foto do carro"
@@ -344,35 +349,35 @@ const DriverDashboard = () => {
                 
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Modelo</p>
-                    <p className="font-medium">{profile.vehicle_model}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Modelo</p>
+                    <p className="font-medium dark:text-white">{profile.vehicle_model}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Ano</p>
-                    <p className="font-medium">{profile.vehicle_year}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Ano</p>
+                    <p className="font-medium dark:text-white">{profile.vehicle_year}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Cor</p>
-                    <p className="font-medium">{profile.vehicle_color}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Cor</p>
+                    <p className="font-medium dark:text-white">{profile.vehicle_color}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Placa</p>
-                    <p className="font-medium font-mono">{profile.vehicle_plate}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Placa</p>
+                    <p className="font-medium font-mono dark:text-white">{profile.vehicle_plate}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Preço/km</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Preço/km</p>
                     <p className="font-medium text-green-600">R$ {profile.price_per_km.toFixed(2)}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Avaliação</p>
-                    <p className="font-medium">⭐ {profile.rating.toFixed(1)}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Avaliação</p>
+                    <p className="font-medium dark:text-white">⭐ {profile.rating.toFixed(1)}</p>
                   </div>
                 </div>
               </>
             ) : (
               <div className="text-center py-8">
                 <Car className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 dark:text-gray-300 mb-4">
                   Complete seu perfil para começar a receber corridas
                 </p>
                 <Button onClick={() => setIsEditing(true)}>
@@ -385,27 +390,27 @@ const DriverDashboard = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-white/80 backdrop-blur">
+          <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur">
             <CardContent className="p-6 text-center">
               <MessageCircle className="h-8 w-8 mx-auto text-blue-600 mb-2" />
-              <p className="text-2xl font-bold">0</p>
-              <p className="text-sm text-gray-600">Conversas Hoje</p>
+              <p className="text-2xl font-bold dark:text-white">0</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Conversas Hoje</p>
             </CardContent>
           </Card>
           
-          <Card className="bg-white/80 backdrop-blur">
+          <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur">
             <CardContent className="p-6 text-center">
               <User className="h-8 w-8 mx-auto text-green-600 mb-2" />
-              <p className="text-2xl font-bold">0</p>
-              <p className="text-sm text-gray-600">Corridas Realizadas</p>
+              <p className="text-2xl font-bold dark:text-white">0</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Corridas Realizadas</p>
             </CardContent>
           </Card>
           
-          <Card className="bg-white/80 backdrop-blur">
+          <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur">
             <CardContent className="p-6 text-center">
               <Settings className="h-8 w-8 mx-auto text-purple-600 mb-2" />
-              <p className="text-2xl font-bold">{profile?.rating?.toFixed(1) || '5.0'}</p>
-              <p className="text-sm text-gray-600">Sua Avaliação</p>
+              <p className="text-2xl font-bold dark:text-white">{profile?.rating?.toFixed(1) || '5.0'}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Sua Avaliação</p>
             </CardContent>
           </Card>
         </div>

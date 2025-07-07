@@ -506,7 +506,7 @@ const AdminPanel = () => {
                     </TableCell>
                   </TableRow>
                 ))}
-              </Users>
+              </TableBody>
             </Table>
           </CardContent>
         </Card>

@@ -11,12 +11,19 @@ export const useAdminAuth = () => {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setUser(session.user);
-        await checkAdminStatus(session.user.id);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Sessão inicial:', session);
+        
+        if (session?.user) {
+          setUser(session.user);
+          await checkAdminStatus(session.user.id);
+        }
+      } catch (error) {
+        console.error('Erro ao obter sessão inicial:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     getInitialSession();
@@ -24,6 +31,8 @@ export const useAdminAuth = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Mudança de autenticação:', event, session);
+        
         if (session?.user) {
           setUser(session.user);
           await checkAdminStatus(session.user.id);
@@ -40,15 +49,21 @@ export const useAdminAuth = () => {
 
   const checkAdminStatus = async (userId: string) => {
     try {
+      console.log('Verificando status de admin para:', userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', userId)
         .single();
 
+      console.log('Resultado da verificação de admin:', { data, error });
+
       if (!error && data?.role === 'admin') {
+        console.log('Usuário é admin');
         setIsAdmin(true);
       } else {
+        console.log('Usuário não é admin');
         setIsAdmin(false);
       }
     } catch (error) {
@@ -58,6 +73,7 @@ export const useAdminAuth = () => {
   };
 
   const logout = async () => {
+    console.log('Fazendo logout...');
     await supabase.auth.signOut();
     setUser(null);
     setIsAdmin(false);

@@ -31,6 +31,7 @@ const DriverDashboard = () => {
   const { user } = useAuthState();
   const [profile, setProfile] = useState<DriverProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     vehicle_model: '',
@@ -44,21 +45,36 @@ const DriverDashboard = () => {
 
   useEffect(() => {
     if (user) {
+      console.log('Usuário logado:', user);
       fetchDriverProfile();
     }
   }, [user]);
 
   const fetchDriverProfile = async () => {
+    if (!user?.id) {
+      console.log('Usuário não encontrado');
+      setLoading(false);
+      return;
+    }
+
     try {
+      console.log('Buscando perfil do motorista para usuário:', user.id);
+      
       const { data, error } = await supabase
         .from('driver_profiles')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      console.log('Resultado da busca:', { data, error });
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Erro ao buscar perfil:', error);
+        throw error;
+      }
       
       if (data) {
+        console.log('Perfil encontrado:', data);
         setProfile(data);
         setEditData({
           vehicle_model: data.vehicle_model,
@@ -69,6 +85,8 @@ const DriverDashboard = () => {
           profile_photo_url: data.profile_photo_url || '',
           car_photo_url: data.car_photo_url || ''
         });
+      } else {
+        console.log('Nenhum perfil encontrado para o usuário');
       }
     } catch (error) {
       console.error('Erro ao buscar perfil:', error);
@@ -85,12 +103,17 @@ const DriverDashboard = () => {
     }
 
     try {
+      console.log('Alterando status online para:', isOnline);
+      
       const { error } = await supabase
         .from('driver_profiles')
         .update({ is_online: isOnline })
         .eq('id', profile.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao atualizar status:', error);
+        throw error;
+      }
       
       setProfile(prev => prev ? { ...prev, is_online: isOnline } : null);
       toast.success(isOnline ? 'Você está online!' : 'Você está offline');
@@ -101,43 +124,79 @@ const DriverDashboard = () => {
   };
 
   const handleSaveProfile = async () => {
+    if (!user?.id) {
+      toast.error('Usuário não encontrado');
+      return;
+    }
+
+    setSaving(true);
+    
     try {
+      console.log('Salvando perfil:', editData);
+      
       const profileData = {
-        user_id: user?.id,
-        ...editData,
+        user_id: user.id,
+        vehicle_model: editData.vehicle_model,
+        vehicle_plate: editData.vehicle_plate,
+        vehicle_color: editData.vehicle_color,
+        vehicle_year: editData.vehicle_year,
+        price_per_km: editData.price_per_km,
+        profile_photo_url: editData.profile_photo_url,
+        car_photo_url: editData.car_photo_url,
         updated_at: new Date().toISOString()
       };
 
+      console.log('Dados que serão salvos:', profileData);
+
       if (profile) {
-        // Update existing profile
-        const { error } = await supabase
+        // Atualizar perfil existente
+        console.log('Atualizando perfil existente, ID:', profile.id);
+        
+        const { data, error } = await supabase
           .from('driver_profiles')
           .update(profileData)
-          .eq('id', profile.id);
+          .eq('id', profile.id)
+          .select()
+          .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao atualizar perfil:', error);
+          throw error;
+        }
+        
+        console.log('Perfil atualizado com sucesso:', data);
+        setProfile(data);
       } else {
-        // Create new profile
+        // Criar novo perfil
+        console.log('Criando novo perfil');
+        
         const { data, error } = await supabase
           .from('driver_profiles')
           .insert([profileData])
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao criar perfil:', error);
+          throw error;
+        }
+        
+        console.log('Perfil criado com sucesso:', data);
         setProfile(data);
       }
 
       toast.success('Perfil salvo com sucesso!');
       setIsEditing(false);
-      fetchDriverProfile();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar perfil:', error);
-      toast.error('Erro ao salvar perfil');
+      toast.error('Erro ao salvar perfil: ' + (error.message || 'Erro desconhecido'));
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleImageUpload = (type: 'profile' | 'car', url: string) => {
+    console.log('Imagem carregada:', type, url);
     if (type === 'profile') {
       setEditData(prev => ({ ...prev, profile_photo_url: url }));
     } else {
@@ -146,6 +205,7 @@ const DriverDashboard = () => {
   };
 
   const handleLogout = async () => {
+    console.log('Fazendo logout...');
     await supabase.auth.signOut();
     toast.success('Logout realizado com sucesso!');
   };
@@ -247,6 +307,7 @@ const DriverDashboard = () => {
               variant="outline" 
               size="sm"
               onClick={() => setIsEditing(!isEditing)}
+              disabled={saving}
             >
               <Edit className="h-4 w-4 mr-2" />
               {isEditing ? 'Cancelar' : 'Editar'}
@@ -264,6 +325,7 @@ const DriverDashboard = () => {
                       value={editData.vehicle_model}
                       onChange={(e) => setEditData(prev => ({...prev, vehicle_model: e.target.value}))}
                       placeholder="Ex: Civic, Corolla"
+                      required
                     />
                   </div>
                   
@@ -273,9 +335,10 @@ const DriverDashboard = () => {
                       id="vehicle_year"
                       type="number"
                       value={editData.vehicle_year}
-                      onChange={(e) => setEditData(prev => ({...prev, vehicle_year: parseInt(e.target.value)}))}
+                      onChange={(e) => setEditData(prev => ({...prev, vehicle_year: parseInt(e.target.value) || 2020}))}
                       min="2000"
                       max={new Date().getFullYear() + 1}
+                      required
                     />
                   </div>
                 </div>
@@ -288,6 +351,7 @@ const DriverDashboard = () => {
                       value={editData.vehicle_color}
                       onChange={(e) => setEditData(prev => ({...prev, vehicle_color: e.target.value}))}
                       placeholder="Ex: Branco, Prata"
+                      required
                     />
                   </div>
                   
@@ -299,6 +363,7 @@ const DriverDashboard = () => {
                       onChange={(e) => setEditData(prev => ({...prev, vehicle_plate: e.target.value.toUpperCase()}))}
                       placeholder="ABC-1234"
                       maxLength={8}
+                      required
                     />
                   </div>
                 </div>
@@ -312,12 +377,17 @@ const DriverDashboard = () => {
                     min="1.00"
                     max="10.00"
                     value={editData.price_per_km}
-                    onChange={(e) => setEditData(prev => ({...prev, price_per_km: parseFloat(e.target.value)}))}
+                    onChange={(e) => setEditData(prev => ({...prev, price_per_km: parseFloat(e.target.value) || 2.50}))}
+                    required
                   />
                 </div>
 
-                <Button onClick={handleSaveProfile} className="w-full">
-                  Salvar Informações
+                <Button 
+                  onClick={handleSaveProfile} 
+                  className="w-full"
+                  disabled={saving}
+                >
+                  {saving ? 'Salvando...' : 'Salvar Informações'}
                 </Button>
               </>
             ) : profile ? (

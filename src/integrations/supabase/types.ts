@@ -12,12 +12,14 @@ export type Database = {
       driver_profiles: {
         Row: {
           accepts_interior: boolean | null
+          car_photo_url: string | null
           created_at: string | null
           current_lat: number | null
           current_lng: number | null
           id: string
           is_online: boolean | null
           price_per_km: number
+          profile_photo_url: string | null
           rating: number | null
           updated_at: string | null
           user_id: string | null
@@ -28,12 +30,14 @@ export type Database = {
         }
         Insert: {
           accepts_interior?: boolean | null
+          car_photo_url?: string | null
           created_at?: string | null
           current_lat?: number | null
           current_lng?: number | null
           id?: string
           is_online?: boolean | null
           price_per_km?: number
+          profile_photo_url?: string | null
           rating?: number | null
           updated_at?: string | null
           user_id?: string | null
@@ -44,12 +48,14 @@ export type Database = {
         }
         Update: {
           accepts_interior?: boolean | null
+          car_photo_url?: string | null
           created_at?: string | null
           current_lat?: number | null
           current_lng?: number | null
           id?: string
           is_online?: boolean | null
           price_per_km?: number
+          profile_photo_url?: string | null
           rating?: number | null
           updated_at?: string | null
           user_id?: string | null

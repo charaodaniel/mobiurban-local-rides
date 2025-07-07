@@ -19,6 +19,8 @@ interface Driver {
   price_per_km: number;
   rating: number;
   is_online: boolean;
+  profile_photo_url?: string;
+  car_photo_url?: string;
   users: {
     name: string;
     phone: string;
@@ -143,7 +145,7 @@ const DriversList = ({ onBack }: DriversListProps) => {
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">
                     <Avatar className="h-12 w-12 ring-2 ring-green-500">
-                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${driver.users.name}`} />
+                      <AvatarImage src={driver.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${driver.users.name}`} />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-green-500 text-white">
                         {driver.users.name.substring(0, 2).toUpperCase()}
                       </AvatarFallback>

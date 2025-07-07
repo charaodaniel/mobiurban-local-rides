@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +10,7 @@ import { LogOut, Settings, MessageCircle, User, Car, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthState } from "@/hooks/useAuthState";
 import { toast } from "sonner";
+import ImageUpload from "./ImageUpload";
 
 interface DriverProfile {
   id: string;
@@ -21,6 +21,8 @@ interface DriverProfile {
   price_per_km: number;
   is_online: boolean;
   rating: number;
+  profile_photo_url?: string;
+  car_photo_url?: string;
 }
 
 const DriverDashboard = () => {
@@ -33,7 +35,9 @@ const DriverDashboard = () => {
     vehicle_plate: '',
     vehicle_color: '',
     vehicle_year: new Date().getFullYear(),
-    price_per_km: 2.50
+    price_per_km: 2.50,
+    profile_photo_url: '',
+    car_photo_url: ''
   });
 
   useEffect(() => {
@@ -59,7 +63,9 @@ const DriverDashboard = () => {
           vehicle_plate: data.vehicle_plate,
           vehicle_color: data.vehicle_color,
           vehicle_year: data.vehicle_year,
-          price_per_km: data.price_per_km
+          price_per_km: data.price_per_km,
+          profile_photo_url: data.profile_photo_url || '',
+          car_photo_url: data.car_photo_url || ''
         });
       }
     } catch (error) {
@@ -129,6 +135,14 @@ const DriverDashboard = () => {
     }
   };
 
+  const handleImageUpload = (type: 'profile' | 'car', url: string) => {
+    if (type === 'profile') {
+      setEditData(prev => ({ ...prev, profile_photo_url: url }));
+    } else {
+      setEditData(prev => ({ ...prev, car_photo_url: url }));
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success('Logout realizado com sucesso!');
@@ -149,7 +163,7 @@ const DriverDashboard = () => {
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={user?.user_metadata?.avatar_url} />
+              <AvatarImage src={profile?.profile_photo_url || user?.user_metadata?.avatar_url} />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-green-500 text-white">
                 {user?.user_metadata?.name?.substring(0, 2).toUpperCase() || 'M'}
               </AvatarFallback>
@@ -193,6 +207,24 @@ const DriverDashboard = () => {
             </div>
           </CardHeader>
         </Card>
+
+        {/* Photo Upload Cards */}
+        {isEditing && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ImageUpload
+              currentImageUrl={editData.profile_photo_url}
+              onImageUploaded={(url) => handleImageUpload('profile', url)}
+              type="profile"
+              userId={user?.id || ''}
+            />
+            <ImageUpload
+              currentImageUrl={editData.car_photo_url}
+              onImageUploaded={(url) => handleImageUpload('car', url)}
+              type="car"
+              userId={user?.id || ''}
+            />
+          </div>
+        )}
 
         {/* Profile Card */}
         <Card className="bg-white/80 backdrop-blur">
@@ -284,32 +316,59 @@ const DriverDashboard = () => {
                 </Button>
               </>
             ) : profile ? (
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Modelo</p>
-                  <p className="font-medium">{profile.vehicle_model}</p>
+              <>
+                {(profile.profile_photo_url || profile.car_photo_url) && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {profile.profile_photo_url && (
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 mb-2">Foto de Perfil</p>
+                        <img
+                          src={profile.profile_photo_url}
+                          alt="Foto de perfil"
+                          className="w-32 h-32 rounded-full object-cover mx-auto border-2 border-gray-200"
+                        />
+                      </div>
+                    )}
+                    {profile.car_photo_url && (
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 mb-2">Foto do Carro</p>
+                        <img
+                          src={profile.car_photo_url}
+                          alt="Foto do carro"
+                          className="w-full h-48 rounded-lg object-cover border-2 border-gray-200"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Modelo</p>
+                    <p className="font-medium">{profile.vehicle_model}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Ano</p>
+                    <p className="font-medium">{profile.vehicle_year}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Cor</p>
+                    <p className="font-medium">{profile.vehicle_color}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Placa</p>
+                    <p className="font-medium font-mono">{profile.vehicle_plate}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Preço/km</p>
+                    <p className="font-medium text-green-600">R$ {profile.price_per_km.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Avaliação</p>
+                    <p className="font-medium">⭐ {profile.rating.toFixed(1)}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Ano</p>
-                  <p className="font-medium">{profile.vehicle_year}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Cor</p>
-                  <p className="font-medium">{profile.vehicle_color}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Placa</p>
-                  <p className="font-medium font-mono">{profile.vehicle_plate}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Preço/km</p>
-                  <p className="font-medium text-green-600">R$ {profile.price_per_km.toFixed(2)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Avaliação</p>
-                  <p className="font-medium">⭐ {profile.rating.toFixed(1)}</p>
-                </div>
-              </div>
+              </>
             ) : (
               <div className="text-center py-8">
                 <Car className="h-12 w-12 mx-auto text-gray-400 mb-4" />

@@ -16,6 +16,8 @@ interface Driver {
   vehicle_year: number;
   price_per_km: number;
   rating: number;
+  profile_photo_url?: string;
+  car_photo_url?: string;
   users: {
     name: string;
     phone: string;
@@ -59,7 +61,7 @@ const DriverDetails = ({ driver, onBack }: DriverDetailsProps) => {
             <CardContent className="p-6">
               <div className="flex flex-col items-center text-center mb-6">
                 <Avatar className="h-24 w-24 mb-4 ring-4 ring-green-500">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${driver.users.name}`} />
+                  <AvatarImage src={driver.profile_photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${driver.users.name}`} />
                   <AvatarFallback className="bg-gradient-to-br from-blue-500 to-green-500 text-white text-2xl">
                     {driver.users.name.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
@@ -77,6 +79,17 @@ const DriverDetails = ({ driver, onBack }: DriverDetailsProps) => {
                   </div>
                 </div>
               </div>
+
+              {/* Car Photo */}
+              {driver.car_photo_url && (
+                <div className="mb-6">
+                  <img
+                    src={driver.car_photo_url}
+                    alt="Foto do carro"
+                    className="w-full h-48 rounded-lg object-cover border-2 border-gray-200"
+                  />
+                </div>
+              )}
 
               {/* Vehicle Info */}
               <div className="bg-gray-50 rounded-lg p-4 mb-6">

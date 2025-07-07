@@ -36,6 +36,65 @@ const DriversList = ({ onBack }: DriversListProps) => {
   const [loading, setLoading] = useState(true);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
 
+  const fetchOnlineDrivers = async () => {
+    try {
+      console.log('Buscando motoristas online...');
+      
+      // Primeiro, vamos buscar todos os motoristas online
+      const { data: driversData, error: driversError } = await supabase
+        .from('driver_profiles')
+        .select('*')
+        .eq('is_online', true);
+
+      if (driversError) {
+        console.error('Erro ao buscar driver_profiles:', driversError);
+        throw driversError;
+      }
+
+      console.log('Motoristas encontrados:', driversData);
+
+      if (!driversData || driversData.length === 0) {
+        console.log('Nenhum motorista online encontrado');
+        setDrivers([]);
+        return;
+      }
+
+      // Agora buscar os dados dos usuários correspondentes
+      const userIds = driversData.map(driver => driver.user_id);
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, name, phone')
+        .in('id', userIds);
+
+      if (usersError) {
+        console.error('Erro ao buscar users:', usersError);
+        throw usersError;
+      }
+
+      console.log('Dados dos usuários:', usersData);
+
+      // Combinar os dados
+      const combinedData = driversData.map(driver => {
+        const user = usersData?.find(u => u.id === driver.user_id);
+        return {
+          ...driver,
+          users: {
+            name: user?.name || 'Nome não disponível',
+            phone: user?.phone || ''
+          }
+        };
+      });
+
+      console.log('Dados combinados:', combinedData);
+      setDrivers(combinedData);
+    } catch (error) {
+      console.error('Erro ao buscar motoristas:', error);
+      toast.error('Erro ao carregar motoristas online');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchOnlineDrivers();
     
@@ -49,7 +108,8 @@ const DriversList = ({ onBack }: DriversListProps) => {
           schema: 'public',
           table: 'driver_profiles'
         },
-        () => {
+        (payload) => {
+          console.log('Atualização em tempo real:', payload);
           fetchOnlineDrivers();
         }
       )
@@ -59,26 +119,6 @@ const DriversList = ({ onBack }: DriversListProps) => {
       supabase.removeChannel(channel);
     };
   }, []);
-
-  const fetchOnlineDrivers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('driver_profiles')
-        .select(`
-          *,
-          users!inner(name, phone)
-        `)
-        .eq('is_online', true);
-
-      if (error) throw error;
-      setDrivers(data || []);
-    } catch (error) {
-      console.error('Erro ao buscar motoristas:', error);
-      toast.error('Erro ao carregar motoristas online');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (selectedDriver) {
     return (
